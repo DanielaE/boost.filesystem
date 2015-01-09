@@ -1780,7 +1780,7 @@ namespace detail
 
       std::vector<path::value_type> buf(GetTempPathW(0, NULL));
 
-      if (buf.empty() || GetTempPathW(buf.size(), &buf[0])==0)
+      if (buf.empty() || GetTempPathW(static_cast<DWORD>(buf.size()), &buf[0])==0)
       {
         if(!buf.empty()) ::SetLastError(ENOTDIR);
         error(true, ec, "boost::filesystem::temp_directory_path");
