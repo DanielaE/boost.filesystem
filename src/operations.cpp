@@ -548,9 +548,7 @@ namespace
     /*_In_*/ BOOLEAN          CaseInSensitive
   );
 
-  PtrRtlEqualUnicodeString rtl_equal_unicode_string_api = PtrRtlEqualUnicodeString(
-    ::GetProcAddress(
-      ::GetModuleHandleW(L"ntdll.dll"), "RtlEqualUnicodeString"));
+  PtrRtlEqualUnicodeString rtl_equal_unicode_string_api;
 
 #ifndef LOCALE_INVARIANT
 #  define LOCALE_INVARIANT (MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT))
@@ -614,9 +612,20 @@ namespace
   
   typedef bool (*Ptr_equal_string_ordinal_ic)(const wchar_t*, const wchar_t*);
 
-  Ptr_equal_string_ordinal_ic equal_string_ordinal_ic = 
-    rtl_equal_unicode_string_api ? equal_string_ordinal_ic_1 : equal_string_ordinal_ic_2;
-  
+  Ptr_equal_string_ordinal_ic get_compare_function() {
+    rtl_equal_unicode_string_api = PtrRtlEqualUnicodeString(
+      ::GetProcAddress(
+        ::GetModuleHandleW(L"ntdll.dll"), "RtlEqualUnicodeString"));
+
+    return rtl_equal_unicode_string_api ? equal_string_ordinal_ic_1
+                                        : equal_string_ordinal_ic_2;
+  }
+
+  bool equal_string_ordinal_ic(const wchar_t* s1, const wchar_t* s2) {
+    static Ptr_equal_string_ordinal_ic const compare_function = get_compare_function();
+    return compare_function(s1, s2);
+  }
+
   perms make_permissions(const path& p, DWORD attr)
   {
     perms prms = fs::owner_read | fs::group_read | fs::others_read;
